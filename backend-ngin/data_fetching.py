@@ -1,6 +1,6 @@
 import pandas as pd
 
-df = pd.read_csv('../data/chicago_prop_data.csv')
+df = pd.read_csv('C:/Users/escal/Documents/DSA/Homefinder/data/chicago_data_cleaned.csv', low_memory= False)
 
 df_110k = df.head(110000)
 
