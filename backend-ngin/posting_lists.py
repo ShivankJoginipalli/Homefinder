@@ -2,8 +2,13 @@
 import csv
 import re
 import argparse
-from collections import defaultdict
-from typing import List, Dict
+from typing import List
+import sys
+import os
+
+# Add the directory containing hash_table.py to the path
+sys.path.insert(0, os.path.dirname(os.path.abspath("backend-ngin/hash_table.py")))
+from hash_table import DefaultHashTable
 
 _int_re = re.compile(r"-?\d+")
 
@@ -50,6 +55,17 @@ def parse_price_like(x):
             return None
 
 def intersect_two(a: List[int], b: List[int]) -> List[int]:
+    """
+    Intersect two sorted lists using two-pointer algorithm.
+    Time complexity: O(n + m) where n, m are list lengths.
+    
+    Args:
+        a: First sorted list
+        b: Second sorted list
+        
+    Returns:
+        Sorted list of elements in both lists
+    """
     i = 0
     j = 0
     out = []
@@ -65,6 +81,16 @@ def intersect_two(a: List[int], b: List[int]) -> List[int]:
     return out
 
 def intersect_many(lists: List[List[int]]) -> List[int]:
+    """
+    Intersect multiple sorted lists.
+    Optimizes by starting with smallest list and early-exit on empty result.
+    
+    Args:
+        lists: List of sorted lists to intersect
+        
+    Returns:
+        Sorted list of elements in all lists
+    """
     filtered = []
     for lst in lists:
         if lst:
@@ -80,6 +106,10 @@ def intersect_many(lists: List[List[int]]) -> List[int]:
     return cur
 
 def merge_union_two(a: List[int], b: List[int]) -> List[int]:
+    """
+    Merge two sorted lists into union using two-pointer algorithm.
+    Removes duplicates in the process.
+    """
     i = 0
     j = 0
     out = []
@@ -113,6 +143,9 @@ def merge_union_two(a: List[int], b: List[int]) -> List[int]:
     return out
 
 def merge_union_many(lists: List[List[int]]) -> List[int]:
+    """
+    Merge multiple sorted lists into union.
+    """
     out = []
     for lst in lists:
         if not lst:
@@ -124,9 +157,15 @@ def merge_union_many(lists: List[List[int]]) -> List[int]:
     return out
 
 class PostingIndex:
+    """
+    Posting index using sorted lists for space efficiency.
+    Uses custom hash table implementation to map attribute values to sorted lists of property IDs.
+    Employs merge-based intersection algorithm for query operations.
+    """
+    
     def __init__(self, price_bin: int):
         self.price_bin = price_bin
-        self.postings: Dict[str, List[int]] = defaultdict(list)
+        self.postings = DefaultHashTable(default_factory=list)
         self.max_fullbaths = 0
         self.max_bedrooms = 0
         self.num_rows = 0
@@ -136,17 +175,24 @@ class PostingIndex:
         self.prices: List[float] = []
 
     def _key_bed(self, v: int) -> str:
+        """Generate key for bedroom count"""
         return f"Bedrooms={v}"
 
     def _key_baths(self, v: int) -> str:
+        """Generate key for bathroom count"""
         return f"FullBaths={v}"
 
     def _key_pricebin(self, b: int) -> str:
+        """Generate key for price bin"""
         lo = b * self.price_bin
         hi = lo + self.price_bin
         return f"PriceBin=[{lo},{hi})"
 
     def add_row(self, pid: int, bedrooms, fullbaths, price):
+        """
+        Add a property row to the index.
+        Lists are kept unsorted during insertion; finalize() sorts them.
+        """
         b = parse_int_like(bedrooms)
         if b is not None and b >= 0:
             self.postings[self._key_bed(b)].append(pid)
@@ -171,8 +217,14 @@ class PostingIndex:
             self.prices[pid] = p
 
     def finalize(self):
-        for key, lst in self.postings.items():
+        """
+        Sort and deduplicate all posting lists.
+        Must be called after all rows are added and before querying.
+        """
+        for key, value in self.postings.items():
+            lst = value
             lst.sort()
+            # Remove duplicates in-place
             w = 0
             for x in lst:
                 if w == 0 or lst[w - 1] != x:
@@ -182,12 +234,19 @@ class PostingIndex:
         return self
 
     def q_bedrooms_eq(self, v: int) -> List[int]:
+        """
+        Query for properties with exactly v bedrooms.
+        """
         lst = self.postings.get(self._key_bed(v))
         if lst is None:
             return []
         return lst
 
     def q_fullbaths_ge(self, v: int) -> List[int]:
+        """
+        Query for properties with at least v full bathrooms.
+        Uses merge-based union for combining multiple bathroom counts.
+        """
         lists = []
         k = v
         while k <= self.max_fullbaths:
@@ -199,6 +258,10 @@ class PostingIndex:
         return merge_union_many(lists)
 
     def q_price_range_bins(self, lo: int, hi: int) -> List[int]:
+        """
+        Query for properties in price range using binned approach.
+        Uses merge-based union to combine multiple price bins.
+        """
         b_lo = lo // self.price_bin
         b_hi_excl = (hi + (self.price_bin - 1)) // self.price_bin
         lists = []
@@ -212,15 +275,22 @@ class PostingIndex:
         return merge_union_many(lists)
 
     def post_filter_price_exact(self, pids: List[int], lo: int, hi: int) -> List[int]:
+        """
+        Post-filter properties to exact price range.
+        Needed because bin-based query may include properties outside exact range.
+        """
         out = []
         for pid in pids:
             if 0 <= pid < len(self.prices):
                 p = self.prices[pid]
-                if p == p and lo <= p <= hi:
+                if p == p and lo <= p <= hi:  # p == p checks for NaN
                     out.append(pid)
         return out
 
 def build_index(csv_path, bedrooms_col, fullbaths_col, price_col, price_bin):
+    """
+    Build a sorted posting list index from CSV file
+    """
     idx = PostingIndex(price_bin=price_bin)
     with open(csv_path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
