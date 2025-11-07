@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """
-Custom Hash Table Implementation
-Implements a hash table from scratch using open addressing with linear probing for collision resolution. Uses FNV-1a hash function.
-Source that helped with the FNV hash implementation: http://www.isthe.com/chongo/tech/comp/fnv/
+Custom Hash Table Implementation. Uses FNV-1a hash function.
+Source used to help with a lot of this: http://www.isthe.com/chongo/tech/comp/fnv/
 """
 
-class HashTable:    
+class HashTable:
+    """
+    Hash table with open addressing (linear probing) for collision resolution. Implements FNV-1a hash function for string keys.
+    """
+    
     def __init__(self, initial_capacity=16, load_factor=0.75):
         """
         Initialize hash table with given capacity and load factor.
@@ -177,7 +180,11 @@ class HashTable:
                 yield self.values[i]
 
 
-class DefaultHashTable(HashTable):    
+class DefaultHashTable(HashTable):
+    """
+    Similar to collections.defaultdict but using our custom hash table.
+    """
+    
     def __init__(self, default_factory=None, initial_capacity=16, load_factor=0.75):
         """
         Initialize with a default factory function.
@@ -220,7 +227,8 @@ class DefaultHashTable(HashTable):
         return default_value
 
 
-#testing purposes
+# Simple test
+if __name__ == "__main__":
     print("Testing HashTable implementation...")
     
     # Test basic operations
@@ -249,6 +257,8 @@ class DefaultHashTable(HashTable):
     ht2 = HashTable(initial_capacity=8)
     for i in range(100):
         ht2[f"key{i}"] = f"value{i}"
-
+    
+    print(f"Stored 100 entries, size: {len(ht2)}, capacity: {ht2.capacity}")
+    print(f"Successfully retrieved key50: {ht2.get('key50')}")
     
     print("\nAll tests passed!")
