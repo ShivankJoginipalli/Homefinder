@@ -90,10 +90,6 @@ class HashTable:
     def put(self, key, value):
         """
         Insert or update a key-value pair in the hash table.
-        
-        Args:
-            key: Key to insert/update
-            value: Value to associate with the key
         """
         # Check if we need to resize
         if self.size >= self.capacity * self.load_factor:
@@ -110,13 +106,6 @@ class HashTable:
     def get(self, key, default=None):
         """
         Get the value associated with a key.
-        
-        Args:
-            key: Key to look up
-            default: Value to return if key not found
-            
-        Returns:
-            Value associated with key, or default if not found
         """
         index, found = self._find_slot(key)
         
@@ -127,12 +116,6 @@ class HashTable:
     def contains(self, key):
         """
         Check if a key exists in the hash table.
-        
-        Args:
-            key: Key to check
-            
-        Returns:
-            True if key exists, False otherwise
         """
         _, found = self._find_slot(key)
         return found
@@ -140,12 +123,6 @@ class HashTable:
     def remove(self, key):
         """
         Remove a key-value pair from the hash table.
-        
-        Args:
-            key: Key to remove
-            
-        Returns:
-            True if key was removed, False if key didn't exist
         """
         index, found = self._find_slot(key)
         
@@ -178,9 +155,6 @@ class HashTable:
     def items(self):
         """
         Return an iterator over (key, value) pairs.
-        
-        Yields:
-            Tuples of (key, value)
         """
         for i in range(self.capacity):
             if self.keys[i] is not None and self.keys[i] != self.DELETED:
@@ -189,9 +163,6 @@ class HashTable:
     def keys_iter(self):
         """
         Return an iterator over keys.
-        
-        Yields:
-            Keys in the hash table
         """
         for i in range(self.capacity):
             if self.keys[i] is not None and self.keys[i] != self.DELETED:
@@ -200,21 +171,13 @@ class HashTable:
     def values_iter(self):
         """
         Return an iterator over values.
-        
-        Yields:
-            Values in the hash table
         """
         for i in range(self.capacity):
             if self.keys[i] is not None and self.keys[i] != self.DELETED:
                 yield self.values[i]
 
 
-class DefaultHashTable(HashTable):
-    """
-    Hash table that returns a default value for missing keys.
-    Similar to collections.defaultdict but using our custom hash table.
-    """
-    
+class DefaultHashTable(HashTable):    
     def __init__(self, default_factory=None, initial_capacity=16, load_factor=0.75):
         """
         Initialize with a default factory function.
