@@ -188,6 +188,40 @@ def search_homes():
             price_val = parse_price_like(prop.get('Sale Price Clean'))
             age_val = parse_int_like(prop.get('Age'))
             year_built_val = 2018 - age_val if age_val is not None else 'N/A'
+            
+            # Extract latitude and longitude
+            # Common column names: 'Latitude', 'Longitude', 'Location', etc.
+            lat = None
+            lon = None
+            
+            # Try common column name patterns
+            for lat_col in ['Latitude', 'latitude', 'Lat', 'lat', 'LATITUDE']:
+                if lat_col in prop:
+                    try:
+                        lat = float(prop[lat_col])
+                        break
+                    except (ValueError, TypeError):
+                        pass
+            
+            for lon_col in ['Longitude', 'longitude', 'Lon', 'lon', 'Long', 'long', 'LONGITUDE']:
+                if lon_col in prop:
+                    try:
+                        lon = float(prop[lon_col])
+                        break
+                    except (ValueError, TypeError):
+                        pass
+            
+            # If there's a combined 'Location' column like "(41.234, -87.567)"
+            if lat is None and lon is None and 'Location' in prop:
+                try:
+                    location_str = prop['Location'].strip('() ')
+                    parts = location_str.split(',')
+                    if len(parts) == 2:
+                        lat = float(parts[0].strip())
+                        lon = float(parts[1].strip())
+                except (ValueError, TypeError, AttributeError):
+                    pass
+            
             homes.append({
                 'id': pid,
                 'bedrooms': prop.get('Bedrooms', 'N/A'),
@@ -196,7 +230,9 @@ def search_homes():
                 'age': age_val,
                 'year_built': year_built_val,
                 'address': prop.get('Property Address', 'N/A'),
-                'building_sqft': prop.get('Building Square Feet', 'N/A')
+                'building_sqft': prop.get('Building Square Feet', 'N/A'),
+                'latitude': lat,
+                'longitude': lon
             })
 
     return jsonify({
@@ -245,7 +281,7 @@ def health_check():
 
 
 if __name__ == '__main__':
-    csv_file = sys.argv[1] if len(sys.argv) > 1 else "../data/chicago_data_with_prices.csv"
+    csv_file = sys.argv[1] if len(sys.argv) > 1 else "../data/chicago_data_cleaned_dup.csv"
 
     if not os.path.exists(csv_file):
         print(f"ERROR: CSV file not found at: {csv_file}")
