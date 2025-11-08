@@ -43,7 +43,7 @@ This application demonstrates practical implementations of two different data st
    
    On Windows:
 ```bash
-   .venv\Scripts\activate
+   .venv\Scripts\Activate.ps1
 ```
 
 4. **Install required packages**
@@ -59,8 +59,11 @@ The application consists of two components that need to run simultaneously:
 
 Open a terminal and run:
 ```bash
-# Activate virtual environment
+# Activate virtual environment on Mac
 source .venv/bin/activate
+
+# Activate virtual environment on Windows
+.venv\Scripts\Activate.ps1
 
 # Navigate to backend directory
 cd backend-ngin
@@ -86,8 +89,11 @@ Starting Flask server on http://127.0.0.1:5000
 
 Open a **new terminal** and run:
 ```bash
-# Activate virtual environment
+# Activate virtual environment on Mac
 source .venv/bin/activate
+
+# Activate virtual environment on Windows
+.venv\Scripts\Activate.ps1
 
 # Navigate to frontend directory
 cd frontend-ngin
