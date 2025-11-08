@@ -281,7 +281,7 @@ def health_check():
 
 
 if __name__ == '__main__':
-    csv_file = sys.argv[1] if len(sys.argv) > 1 else "../data/chicago_data_cleaned_dup.csv"
+    csv_file = sys.argv[1] if len(sys.argv) > 1 else "../data/chicago_data_cleaned.csv"
 
     if not os.path.exists(csv_file):
         print(f"ERROR: CSV file not found at: {csv_file}")
